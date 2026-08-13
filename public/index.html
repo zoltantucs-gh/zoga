@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zoga - Kő, Papír, Olló</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-color: #ffffff;
+      --accent-yellow: #ffd700;
+      --accent-blue: #00d2ff;
+      --accent-green: #28a745;
+      --danger-red: #ff4d4d;
+      --border-color: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: var(--accent-yellow);
+      font-size: 2.2rem;
+      text-align: center;
+      border-bottom: 3px solid var(--accent-yellow);
+      padding-bottom: 10px;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h2, h3 {
+      color: var(--accent-blue);
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 600px;
+      margin-top: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .hidden { display: none !important; }
+
+    .user-bar {
+      background-color: #2a2a2a;
+      border: 2px solid var(--accent-blue);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.1rem;
+    }
+
+    button {
+      background-color: var(--accent-blue);
+      color: #000000;
+      font-weight: bold;
+      font-size: 1.1rem;
+      padding: 12px 20px;
+      border: 2px solid #ffffff;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 8px 4px;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    button:hover, button:focus {
+      background-color: var(--accent-yellow);
+      outline: 3px solid #ffffff;
+      transform: scale(1.03);
+    }
+
+    button:disabled {
+      background-color: #555555;
+      color: #888888;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-success { background-color: var(--accent-green); color: #ffffff; }
+    .btn-danger { background-color: var(--danger-red); color: #ffffff; }
+    .btn-small { font-size: 0.9rem; padding: 6px 12px; }
+
+    input[type="text"] {
+      background-color: #000000;
+      color: #ffffff;
+      border: 2px solid var(--accent-blue);
+      padding: 12px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    input[type="text"]:focus {
+      outline: 3px solid var(--accent-yellow);
+      border-color: var(--accent-yellow);
+    }
+
+    ul, ol { list-style-type: none; padding: 0; }
+
+    li {
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-left: 5px solid var(--accent-yellow);
+      margin-bottom: 10px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-badge {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status-waiting { background-color: #28a745; color: #fff; }
+    .status-running { background-color: #dc3545; color: #fff; }
+
+    .online-tag { color: #28a745; font-weight: bold; }
+
+    .status-box {
+      background-color: #002b36;
+      border: 2px solid var(--accent-blue);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .choice-group {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .choiceBtn { min-width: 100px; font-size: 1.2rem; }
+    hr { border: 0; height: 1px; background: #444; margin: 20px 0; }
+  </style>
+  <script src="/audio.js"></script>
+</head>
+<body>
+  <h1>Kő, papír, olló</h1>
+
+  <div id="globalUserBar" class="container user-bar hidden" style="margin-top: 0;">
+    <span>Bejelentkezve: <strong id="displayPlayerName" style="color: var(--accent-yellow);"></strong></span>
+    <button id="changeNameBtn" class="btn-small">Név módosítása</button>
+  </div>
+
+  <div id="nicknamePage" class="container">
+    <h2>Üdvözlünk a játékban!</h2>
+    <p>A játék elkezdéséhez kérjük, add meg a becenevedet:</p>
+    <div>
+      <label for="playerNameInput" style="display:block; margin-bottom: 8px; font-weight: bold;">Becenév:</label>
+      <input type="text" id="playerNameInput" placeholder="Írd be a neved...">
+      <button id="saveNameBtn" class="btn-success" style="width: 100%;">Belépés a játékba</button>
+    </div>
+  </div>
+
+  <div id="mainPage" class="container hidden">
+    <div id="systemMessage" aria-live="assertive" role="alert" style="color: var(--danger-red); font-weight: bold; margin-bottom: 15px;"></div>
+
+    <div>
+      <button id="createGameBtn" class="btn-success" style="width: 100%; font-size: 1.2rem;">Új játék indítása</button>
+    </div>
+
+    <hr>
+
+    <h2>Elindított játékok:</h2>
+    <div id="gamesList">Nincs elindított játék.</div>
+
+    <hr>
+
+    <h2>TOP 10 Ranglista:</h2>
+    <div id="leaderboardList">Még nincsenek pontszámok.</div>
+
+    <hr>
+
+    <h2>Online lévő játékosok (<span id="onlineCount">0</span>):</h2>
+    <div id="onlineUsersList" aria-live="polite">Nincs más online játékos.</div>
+  </div>
+
+  <div id="gameRoomPage" class="container hidden">
+    <div class="status-box">
+      <div id="roundTrackerText" style="font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 5px;"></div>
+      <div id="roomStatusText" aria-live="assertive" style="font-size: 1.3rem; font-weight: bold; color: var(--accent-yellow);">
+        Játék állapot...
+      </div>
+    </div>
+
+    <!-- Jelen lévő résztvevők listája várakozáskor -->
+    <div id="waitingParticipants" class="hidden">
+      <h3>Jelen lévő játékra várakozók (<span id="participantCount">0</span> fő):</h3>
+      <ul id="participantsList" aria-live="polite"></ul>
+    </div>
+
+    <div id="hostControls" class="hidden" style="text-align: center; margin-top: 15px;">
+      <button id="addBotBtn" style="font-size: 1.1rem;">+ Bot Hozzáadása</button>
+      <button id="startGameBtn" class="btn-success hidden" style="font-size: 1.3rem; padding: 15px 30px;">Indítás</button>
+    </div>
+
+    <!-- VÁLASZTÓ GOMBOK ELŐREHOZVA -->
+    <div id="gameControls" class="hidden">
+      <h3 style="text-align: center;">Válassz egyet:</h3>
+      <div class="choice-group">
+        <button class="choiceBtn" data-choice="ko">Kő</button>
+        <button class="choiceBtn" data-choice="papir">Papír</button>
+        <button class="choiceBtn" data-choice="ollo">Olló</button>
+      </div>
+    </div>
+
+    <div id="myChoiceInfo" class="hidden" style="text-align: center; font-size: 1.3rem; color: var(--accent-yellow); margin: 15px 0;"></div>
+
+    <!-- PONTSZÁMOK ÉS EREDMÉNYEK LENTI RÉSZRE ÁTHELYEZVE -->
+    <div id="scoreBoard" class="hidden">
+      <h3>Játékosok és eredmények:</h3>
+      <div id="scores" aria-live="polite" style="font-size: 1.1rem;"></div>
+      <p id="roundResultLog" aria-live="assertive" style="font-size: 1.2rem; color: var(--accent-blue); font-weight: bold; text-align: center; margin-top: 15px;"></p>
+    </div>
+
+    <div id="restartControls" class="hidden" style="text-align: center; margin-top: 20px;">
+      <button id="restartGameBtn" class="btn-success" style="font-size: 1.3rem; width: 100%;">Újrajátszás</button>
+    </div>
+
+    <hr>
+    <div style="text-align: center;">
+      <button id="cancelGameBtn" class="btn-danger">Játék elhagyása, kilépés a főoldalra</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const nicknamePage = document.getElementById('nicknamePage');
+    const mainPage = document.getElementById('mainPage');
+    const gameRoomPage = document.getElementById('gameRoomPage');
+
+    const globalUserBar = document.getElementById('globalUserBar');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const saveNameBtn = document.getElementById('saveNameBtn');
+    const displayPlayerName = document.getElementById('displayPlayerName');
+    const changeNameBtn = document.getElementById('changeNameBtn');
+    const createGameBtn = document.getElementById('createGameBtn');
+    const gamesList = document.getElementById('gamesList');
+    const leaderboardList = document.getElementById('leaderboardList');
+    const onlineUsersList = document.getElementById('onlineUsersList');
+    const onlineCount = document.getElementById('onlineCount');
+    const systemMessage = document.getElementById('systemMessage');
+
+    const roundTrackerText = document.getElementById('roundTrackerText');
+    const roomStatusText = document.getElementById('roomStatusText');
+    const waitingParticipants = document.getElementById('waitingParticipants');
+    const participantCount = document.getElementById('participantCount');
+    const participantsList = document.getElementById('participantsList');
+    const hostControls = document.getElementById('hostControls');
+    const addBotBtn = document.getElementById('addBotBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const restartControls = document.getElementById('restartControls');
+    const restartGameBtn = document.getElementById('restartGameBtn');
+    const scoreBoard = document.getElementById('scoreBoard');
+    const scores = document.getElementById('scores');
+    const roundResultLog = document.getElementById('roundResultLog');
+    const gameControls = document.getElementById('gameControls');
+    const myChoiceInfo = document.getElementById('myChoiceInfo');
+    const cancelGameBtn = document.getElementById('cancelGameBtn');
+
+    let currentRoomId = null;
+    let myPlayerName = localStorage.getItem('playroom_nickname') || '';
+    let isHost = false;
+
+    document.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON' && typeof playButtonClickSound === 'function') {
+        playButtonClickSound();
+      }
+    });
+
+    function initUser() {
+      if (myPlayerName) {
+        displayPlayerName.textContent = myPlayerName;
+        nicknamePage.classList.add('hidden');
+        globalUserBar.classList.remove('hidden');
+        mainPage.classList.remove('hidden');
+        changeNameBtn.classList.remove('hidden');
+        
+        socket.emit('user-login', { playerName: myPlayerName });
+        createGameBtn.focus();
+      } else {
+        nicknamePage.classList.remove('hidden');
+        globalUserBar.classList.add('hidden');
+        mainPage.classList.add('hidden');
+        playerNameInput.focus();
+      }
+    }
+
+    saveNameBtn.addEventListener('click', () => {
+      const inputVal = playerNameInput.value.trim();
+      if (!inputVal) {
+        systemMessage.textContent = 'Kérlek, adj meg egy becenevet!';
+        return;
+      }
+      myPlayerName = inputVal;
+      localStorage.setItem('playroom_nickname', myPlayerName);
+      initUser();
+    });
+
+    changeNameBtn.addEventListener('click', () => {
+      localStorage.removeItem('playroom_nickname');
+      myPlayerName = '';
+      playerNameInput.value = '';
+      initUser();
+    });
+
+    initUser();
+
+    socket.on('games-list', (list) => {
+      if (list.length === 0) {
+        gamesList.innerHTML = '<p>Nincs elindított játék.</p>';
+      } else {
+        let html = '<ul>';
+        list.forEach(g => {
+          const isWaiting = g.status === 'játékosokra vár';
+          const badgeClass = isWaiting ? 'status-waiting' : 'status-running';
+          const badgeText = isWaiting ? 'Várakozás' : 'Folyamatban';
+
+          html += `<li><span><strong>${g.hostName}</strong> (Szoba: ${g.roomId}) - <em>Játékosok: ${g.playerCount} fő</em> <span class="status-badge ${badgeClass}">${badgeText}</span></span>`;
+          if (isWaiting) {
+            html += `<button class="btn-small" onclick="joinGame('${g.roomId}')">Csatlakozás</button>`;
+          } else {
+            html += `<span style="font-size: 0.85rem; color: #888;">(Nem lehet csatlakozni)</span>`;
+          }
+          html += `</li>`;
+        });
+        html += '</ul>';
+        gamesList.innerHTML = html;
+      }
+    });
+
+    socket.on('leaderboard-updated', (list) => {
+      if (!list || list.length === 0) {
+        leaderboardList.innerHTML = '<p>Még nincsenek pontszámok a ranglistán.</p>';
+      } else {
+        let html = '<ol>';
+        list.forEach((item, index) => {
+          html += `<li><span><strong>${index + 1}. ${item.playerName}</strong></span> <span>${item.score} pont</span></li>`;
+        });
+        html += '</ol>';
+        leaderboardList.innerHTML = html;
+      }
+    });
+
+    socket.on('online-users-list', (users) => {
+      onlineCount.textContent = users.length;
+      if (users.length === 0) {
+        onlineUsersList.innerHTML = '<p>Nincs elérhető játékos.</p>';
+      } else {
+        let html = '<ul>';
+        users.forEach(name => {
+          const isMe = (name === myPlayerName) ? ' (Te)' : '';
+          html += `<li><span><strong>${name}</strong>${isMe}</span> <span class="online-tag">● Online</span></li>`;
+        });
+        html += '</ul>';
+        onlineUsersList.innerHTML = html;
+      }
+    });
+
+    createGameBtn.addEventListener('click', () => {
+      systemMessage.textContent = '';
+      socket.emit('create-game', { playerName: myPlayerName });
+    });
+
+    addBotBtn.addEventListener('click', () => {
+      if (currentRoomId) {
+        socket.emit('add-bot', { roomId: currentRoomId });
+      }
+    });
+
+    socket.on('game-created', ({ roomId }) => {
+      currentRoomId = roomId;
+      isHost = true;
+      showGameRoom();
+    });
+
+    window.joinGame = function(roomId) {
+      systemMessage.textContent = '';
+      currentRoomId = roomId;
+      isHost = false;
+      socket.emit('join-game', { roomId, playerName: myPlayerName });
+      showGameRoom();
+      updateStatus("Várakozás a játék indítására...");
+    };
+
+    socket.on('game-updated', (game) => {
+      if (game.status === 'játékosokra vár') {
+        scoreBoard.classList.add('hidden');
+        waitingParticipants.classList.remove('hidden');
+        updateParticipantsList(game.players);
+
+        roundTrackerText.textContent = '';
+        if (typeof playCountdownBeep === 'function') playCountdownBeep(false);
+        
+        if (socket.id === game.hostId) {
+          hostControls.classList.remove('hidden');
+          
+          if (game.players.length >= 2) {
+            startGameBtn.classList.remove('hidden');
+            startGameBtn.removeAttribute('disabled');
+            updateStatus("Kattints az Indítás gombra!");
+          } else {
+            startGameBtn.classList.add('hidden');
+            updateStatus("Adj hozzá egy Botot vagy várd meg egy másik játékos csatlakozását!");
+          }
+        } else {
+          updateStatus("Várakozás az indításra...");
+        }
+      } else if (game.status === 'folyamatban') {
+        waitingParticipants.classList.add('hidden');
+        scoreBoard.classList.remove('hidden');
+        updateScores(game.players);
+
+        if (typeof playCountdownBeep === 'function') playCountdownBeep(true);
+        hostControls.classList.add('hidden');
+        restartControls.classList.add('hidden');
+        gameControls.classList.remove('hidden');
+        myChoiceInfo.classList.add('hidden');
+        roundTrackerText.textContent = `Kör: ${game.currentRound} / ${game.maxRounds}`;
+        updateStatus("A játék elkezdődött! Válassz: Kő, Papír vagy Olló!");
+      }
+    });
+
+    startGameBtn.addEventListener('click', () => {
+      socket.emit('start-game', { roomId: currentRoomId });
+    });
+
+    restartGameBtn.addEventListener('click', () => {
+      socket.emit('restart-game', { roomId: currentRoomId });
+    });
+
+    socket.on('game-restarted', (game) => {
+      restartControls.classList.add('hidden');
+      waitingParticipants.classList.add('hidden');
+      scoreBoard.classList.remove('hidden');
+      updateScores(game.players);
+      gameControls.classList.remove('hidden');
+      myChoiceInfo.classList.add('hidden');
+      roundResultLog.textContent = 'Új játék indult! Sok sikert!';
+      roundTrackerText.textContent = `Kör: ${game.currentRound} / ${game.maxRounds}`;
+      updateStatus("A játék újraindul! Válassz a gombok közül!");
+    });
+
+    document.querySelectorAll('.choiceBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const choice = e.target.getAttribute('data-choice');
+        socket.emit('make-choice', { roomId: currentRoomId, choice });
+
+        gameControls.classList.add('hidden');
+        myChoiceInfo.classList.remove('hidden');
+        myChoiceInfo.textContent = `Ezt választottad: ${translateChoice(choice)}`;
+        roundResultLog.textContent = "Választás rögzítve, várakozás a többiekre...";
+      });
+    });
+
+    function translateChoice(c) {
+      if (c === 'ko') return 'Kő';
+      if (c === 'papir') return 'Papír';
+      if (c === 'ollo') return 'Olló';
+      return c;
+    }
+
+    socket.on('player-chose', ({ chosenCount, totalPlayers }) => {
+      roundResultLog.textContent = `Eddig ${chosenCount} / ${totalPlayers} játékos választott.`;
+    });
+
+    socket.on('round-ended', ({ game, roundResult, winners }) => {
+      roundResultLog.textContent = roundResult;
+      updateScores(game.players);
+      roundTrackerText.textContent = `Kör: ${game.currentRound} / ${game.maxRounds}`;
+
+      myChoiceInfo.classList.add('hidden');
+      gameControls.classList.remove('hidden');
+
+      const isWinner = winners && winners.some(w => w.id === socket.id);
+      if (isWinner) {
+        if (typeof playWinSound === 'function') playWinSound();
+      } else if (roundResult.includes('Döntetlen')) {
+        if (typeof playButtonClickSound === 'function') playButtonClickSound();
+      } else {
+        if (typeof playLoseSound === 'function') playLoseSound();
+      }
+    });
+
+    socket.on('game-over', ({ game, roundResult, finalMessage }) => {
+      roundResultLog.textContent = `${roundResult} | ${finalMessage}`;
+      updateScores(game.players);
+      roundTrackerText.textContent = 'Játék vége!';
+
+      gameControls.classList.add('hidden');
+      myChoiceInfo.classList.add('hidden');
+      updateStatus("A meccs befejeződött! Nézd meg a végeredményt.");
+      
+      if (socket.id === game.hostId) {
+        restartControls.classList.remove('hidden');
+      }
+
+      if (typeof playWinSound === 'function') playWinSound();
+    });
+
+    cancelGameBtn.addEventListener('click', () => {
+      socket.emit('cancel-game', { roomId: currentRoomId });
+    });
+
+    socket.on('game-cancelled', ({ message }) => {
+      if (typeof playLoseSound === 'function') playLoseSound();
+      resetToMainPage();
+      systemMessage.textContent = message;
+    });
+
+    function updateStatus(text) {
+      roomStatusText.textContent = text;
+    }
+
+    function showGameRoom() {
+      mainPage.classList.add('hidden');
+      gameRoomPage.classList.remove('hidden');
+      changeNameBtn.classList.add('hidden');
+      cancelGameBtn.focus();
+    }
+
+    function resetToMainPage() {
+      currentRoomId = null;
+      isHost = false;
+      gameRoomPage.classList.add('hidden');
+      mainPage.classList.remove('hidden');
+      changeNameBtn.classList.remove('hidden');
+      hostControls.classList.add('hidden');
+      restartControls.classList.add('hidden');
+      waitingParticipants.classList.add('hidden');
+      scoreBoard.classList.add('hidden');
+      gameControls.classList.add('hidden');
+      myChoiceInfo.classList.add('hidden');
+      roundResultLog.textContent = '';
+      roundTrackerText.textContent = '';
+      createGameBtn.focus();
+    }
+
+    function updateParticipantsList(players) {
+      participantCount.textContent = players.length;
+      participantsList.innerHTML = players.map(p => {
+        const typeBadge = p.isBot ? '<span style="color: #00d2ff;">🤖 Bot</span>' : '<span style="color: #28a745;">👤 Játékos</span>';
+        return `<li><span><strong>${p.name}</strong></span> ${typeBadge}</li>`;
+      }).join('');
+    }
+
+    function updateScores(players) {
+      scores.innerHTML = players.map(p => {
+        const botTag = p.isBot ? ' 🤖' : '';
+        return `<p style="margin: 5px 0;"><strong>${p.name}${botTag}:</strong> ${p.score} pont</p>`;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
